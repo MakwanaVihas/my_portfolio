@@ -7,4 +7,5 @@ Run following commands:
     python manage.py collectstatic
     
     python manage.py runserver
+    
     ```
