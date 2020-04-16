@@ -1,6 +1,6 @@
 # my_portfolio
 
-Run following commands:
+- Run following commands:
     ```bash
     python manage.py makemigrations
     python manage.py migrate
