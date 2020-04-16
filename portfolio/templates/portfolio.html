@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.0/css/datepicker.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.0/js/bootstrap-datepicker.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.js"> </script>
+
+    <meta charset="utf-8">
+    <title></title>
+    <script>
+      $(document).ready(function(){
+        $(function () {
+          // $('#benchmark').select2();
+          // $("#tickers_name").select2();
+          let no=0;
+
+          $("#add_portfolio_button").click(function () {
+            no++;
+            if(no<=3){
+              $(".asset_head").append(`<th scope="col" class="portfolio" id='${no}' style="font-size:2rem">Portfolio #${no}</th>`);
+              let count = 0;
+              $("#table_body").find("tr").map(function () {
+                 $(this).find("td[class=asset]").map(function(){
+                   count++;
+                 })
+              })
+
+              $("#table_body").find("tr").map(function () {
+
+                let count_port = $(this).find(".portfolio").length
+                if(count_port<count){
+                  $(this).append(`<td class="portfolio_input"><input min="0" max="100" step="0.01" required class="stock_input form-control mt-3" type="number"></td>`)
+                }
+
+              })
+            }
+          })
+
+          $("#start_date").datepicker({
+                autoclose: true,
+                todayHighlight: true,
+                format: "yyyy-mm-dd"
+              }).datepicker('update', new Date("2012","00","01"));
+
+          $("#end_date").datepicker({
+                autoclose: true,
+                todayHighlight: true,
+                format: "yyyy-mm-dd"
+              }).datepicker('update', new Date("2020","00","01"));
+
+          $("#asset_form").submit(function() {
+              $("#modal_close").click();
+
+              let vals = []
+              $(".stock_input").map(function () {
+                vals.push($(this).val())
+              })
+
+
+              var data = `
+                <td style="font-size:1.2rem" class="asset" id="${$(this).find("select[id=tickers_name]").children("option:selected").attr("class")}">${$(this).find($("select[id=tickers_name]")).val()}</td>
+              `;
+              data = data + `<td style='text-align:center; display: flex;'>
+                              <button type="button" class="close" aria-label="Close" onclick="deleteRow(this)">
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                              </td>`
+
+
+              $(".portfolio").map(function() {
+                data = data+`<td class="portfolio_input"><input min="0" max="100" step="0.01" required class="stock_input form-control mt-3" type="number"></td>`
+              });
+
+
+              $("#table_body").append(`<tr>${data}</tr>`);
+              $(this).trigger("reset");
+              return false;
+          })
+
+
+
+          });
+        });
+
+        function deleteRow(element) {
+          $(element).parent().parent().remove();
+        }
+
+
+
+
+
+    </script>
+  </head>
+  <body>
+    <nav class="navbar navbar-light bg-light">
+      <a class="navbar-brand" href="#">MyPortfolio.Ai</a>
+      <!-- <button class="btn btn-primary ml-auto mr-3" data-toggle="modal" data-target="#add_portfolio">Add a portfolio</button> -->
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#dropdown" aria-controls="dropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="dropdown">
+        <ul class="navbar-nav">
+          <li class="nav-item active">
+            <a class="nav-link" href="#">Portfolio <span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'assets' %}">Assets</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout'%}">Log out</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+
+    <div class="ml-3">
+      <div class="d-flex justify-content-start">
+        <p style="font-size:2rem">Visualize and backtest Portfolios</p>
+      </div>
+      <div class="d-flex">
+        <p>
+          The portfolio backtesting tool allows you to construct one or more portfolios based on selected ETFs and stocks. You can analyze
+          backtest portfolio returns, risk characteristics, style exposures, and drawdowns. The resules cover both returns and fund fundamentals based
+          portfolio style analysis along with risk and return decomposition by each portfolio asset. You can compare up to three different portfolios against
+          the selected benchmark, and you can also specify any periodic contribution or withdrawal cashflows and the preffered portfolio rebalancing strategy.
+        </p>
+      </div>
+    </div>
+
+
+    <div class="container rounded border border-primary">
+      <form id="investment_details">
+      <div class="row">
+        <div class="col">
+          <div class="form-group">
+            <label for="amount_invested">Amount Invested</label>
+            <input type="number" value="10000" class="form-control" name="amount_invested" step="0.01" id="amount_invested">
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="form-group">
+            <label for="start_date">Start of Investment</label>
+            <div id="start_date" class="input-group date" data-date-format="mm-dd-yyyy">
+                <input class="form-control" type="text" name="date" readonly id="start_date_text" >
+                <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="form-group">
+            <label for="end_date">End of Investment</label>
+            <div id="end_date" class="input-group date" data-date-format="mm-dd-yyyy">
+                <input class="form-control" type="text" name="date" readonly id="end_date_text" >
+                <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <div class="form-group">
+            <label for="benchmark">Date</label>
+            <select id="benchmark" class="custom-select">
+              <option>vanguard 500</option>
+              <option>MSCI World</option>
+              <option>Short term corporate bonds</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      </form>
+    </div>
+
+
+    <div>
+      <button class="btn btn-primary" id="add_portfolio_button">Add another portfolio</button>
+
+      <form id = "table_form">
+        <div class="table-responsive">
+          <table class="table" id="protfolio_table">
+            <thead>
+              <tr class="asset_head">
+                <th scope="col" style="font-size:1.5rem">Your tickers</th>
+                <th scope="col" style="font-size:1.5rem">Delete this row</th>
+              </tr>
+            </thead>
+            <tbody id="table_body">
+
+            </tbody>
+          </table>
+
+          <a id="asset_link" href="#" data-toggle="modal" data-target="#add_portfolio">Add asset</a>
+
+        </div>
+        <div style="text-align:center">
+          <input type="submit" value="Analyze portfolios" class="btn btn-primary" >
+        </div>
+      </form>
+    </div>
+
+    <div class="container" id="allocation_table">
+
+    </div>
+
+    <div class="modal fade" id="add_portfolio" tabindex="-1" role="dialog" aria-hidden="true" aria-labelledby="add_portfolio_label">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="add_portfolio_label">Add a Asset</h5>
+            <button type="button" id="modal_close" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <form id="asset_form" method="get">
+              <div class="form-group">
+                <label for="tickers_name">Name</label>
+                <select id="tickers_name" class="custom-select" style="width:100%">
+                  {% for ticker in tickers%}
+                  <option value="{{ ticker.0 }}" class="{{ticker.1}}">{{ ticker.0 }}({{ ticker.1 }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <input type="submit" class="btn btn-primary" id="submit">
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-container" style="position: relative; height:30rem; width:100%">
+      <canvas id="myChart"></canvas>
+    </div>
+
+
+    <script>
+          var ctx = document.getElementById("myChart").getContext('2d');
+          var myChart = new Chart(ctx, {
+             type: 'line',
+             options: {
+               maintainAspectRatio:false,
+               scales: {
+                  xAxes: [{
+                    type:"time",
+                    distribution: "series",
+                  }]
+                }
+           }
+          });
+          var save_data = {}
+          $("#table_form").submit(function () {
+            let amount_invested = $("#investment_details").find("#amount_invested").val();
+            let start_date = $("#investment_details").find("#start_date_text").val();
+            let end_date = $("#investment_details").find("#end_date_text").val();
+            if(amount_invested == ""){
+              alert("Enter amount_invested")
+              return false;
+            }
+            save_data["amount_invested"] = amount_invested
+
+            // let heads = [];
+            let data={}
+            let port_heads = [];
+            $("#protfolio_table").find("thead").find("tr").find("th").map((i,element)=>{
+              if($(element).html() !== "Delete this row"){
+                data[$(element).html()] = [];
+                save_data[$(element).html()] = [];
+              }
+              if(!($(element).html() === "Delete this row" || $(element).html() === "Your tickers")){
+                port_heads.push($(element).html());
+              }
+
+            });
+            if(Object.keys(data).length==1){
+              alert("Enter data");
+              return false;
+            }
+
+
+            let t_data = $("#protfolio_table").find("tbody").find("tr");
+            let ticker_names = []
+            t_data.map(function(i,item) {
+              data["Your tickers"].push($(item).find(".asset").html())
+              save_data["Your tickers"].push($(item).find(".asset").html())
+
+              ticker_names.push($(item).find(".asset").attr("id"))
+              $(item).find("td").find("input").map(function(i){
+                data["Portfolio #"+(i+1)].push(parseFloat($(this).val()));
+                save_data["Portfolio #"+(i+1)].push(parseFloat($(this).val()));
+              });
+            })
+
+            var ports = [];
+            let is_valid = true;
+            Object.keys(data).map((i,item)=>{
+              if(i !== "Your tickers"){
+                let sum = 0.0;
+                $.each(data[i],function() {
+                  sum += this;
+                });
+                if(sum>100.01 || sum<99.99){
+                  is_valid = false;
+                }
+                ports.push(data[i])
+              }
+            })
+            if(ports.length < 2){
+              alert("Add one more portfolio to compare")
+              return false;
+            }
+
+            if(!is_valid){
+              alert("Sum of percentages should add up to 100%")
+              return false;
+            }
+            else{
+            let colors = ["red","blue","black"]
+
+
+            $.ajax({
+                type:"POST",
+                url:"{% url 'plot_data' %}",
+                data:{"data":JSON.stringify({
+                  "tickers":data["Your tickers"],
+                  "portfolios": ports,
+                  "amount_invested":amount_invested,
+                  "start_date":start_date,
+                  "end_date":end_date})},
+                // async:false,
+                success:(data_)=>{
+
+                  var dataset = []
+                  data_["data"].map((item,i)=>{
+                    dataset.push({
+                      label:"Portfolio "+(i+1),
+                      data:item,
+                      borderColor:colors[i],
+                      backgroundColor:"transparent"
+                    })
+                  })
+                  myChart.data.datasets = dataset;
+                  myChart.update();
+                },
+                error:(error,text,xgr)=>{
+
+                }
+
+              })
+            }
+            let doughnut_ids = []
+            $("#allocation_table").html("");
+
+            port_heads.map((item,head_count)=>{
+
+              let table = `
+                   <thead>
+                     <tr>
+                       <th>Ticker</th>
+                       <th>Name</th>
+                       <th>Percent</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                 `
+
+              data["Your tickers"].map((item,i)=>{
+                let t_data = `
+                <tr>
+                  <td>${item}</td>
+                  <td>${ticker_names[i]}</td>
+                  <td>${ports[head_count][i]}</td>
+                </tr>`
+                table+=t_data;
+              })
+              table+="</tbody>"
+
+              let final_table = `
+              <div class="row">
+                <div class="col">
+                  <h5>${item}</h5>
+                  <table class="table">
+                    ${table}
+                  </table>
+                  <button class="btn btn-outline-primary" onclick="savePortfolio(${head_count})">Save this portfolio..</button>
+                </div>
+                <div class="col" style="height:20rem;width:20rem">
+                  <canvas id="doughnut_${head_count}"></canvas>
+                </div>
+              </div>`
+              $("#allocation_table").append(final_table)
+
+              doughnut_ids.push(`doughnut_${head_count}`)
+            })
+
+            doughnut_ids.map((item,i) => {
+              let do_data = []
+              let colors = []
+              console.log(ports,i);
+              // return false;
+              ports[i].map((item,i) => {
+                do_data.push({"y":item,"label":data["Your tickers"][i]});
+                colors.push(getRandomColor());
+              });
+              console.log(do_data);
+
+              let ctx = document.getElementById(`${item}`).getContext('2d');
+              console.log(ctx);
+              let dou_data = {
+                labels:data["Your tickers"],
+                datasets:[
+                  {
+                    label:item,
+                    data:ports[i],
+                    backgroundColor:colors,
+                    borderWidth: [1, 1, 1, 1, 1]
+                  }
+                ]
+              }
+              let dou_chart = new Chart(ctx, {
+                 type: 'doughnut',
+                 data:dou_data,
+              });
+            });
+            return false;
+
+          })
+          function getRandomColor() {
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for (var i = 0; i < 6; i++) {
+              color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+          }
+
+          function savePortfolio(i){
+            console.log(save_data,save_data["Portfolio #"+(i+1)]);
+            let assets = save_data["Portfolio #"+(i+1)]
+            let tickers = save_data["Your tickers"]
+            let sent_data = JSON.stringify({
+              "amount_invested":save_data["amount_invested"],"assets":assets,"tickers":tickers,"name":"Portfolio #"+(i+1)
+            })
+            $.ajax({
+              url:"{% url 'add_portfolio' %}",
+              type:"POST",
+              data:{"data":sent_data},
+              success: (data)=>{
+                console.log("ok");
+              },
+              error: (error,text,xhr)=>{
+                console.log(error,text,xhr);
+              }
+            })
+          }
+
+    </script>
+  </body>
+</html>

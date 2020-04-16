@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.0/css/datepicker.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.0/js/bootstrap-datepicker.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.js"> </script>
+
+  </head>
+  <script>
+  $(document).ready(function() {
+    $("#start_date").datepicker({
+          autoclose: true,
+          todayHighlight: true,
+          format: "yyyy-mm-dd"
+        }).datepicker('update', new Date("2012","00","01"));
+    $("#end_date").datepicker({
+          autoclose: true,
+          todayHighlight: true,
+          format: "yyyy-mm-dd"
+        }).datepicker('update', new Date());
+
+    $("#asset_form").submit(function() {
+        $("#modal_close").click();
+
+        let vals = []
+        $(".stock_input").map(function () {
+          vals.push($(this).val())
+        })
+
+
+
+        var data = `
+          <td style="font-size:1.2rem" class="asset" id="${$(this).find("select[id=tickers_name]").children("option:selected").attr("class")}">${$(this).find($("select[id=tickers_name]")).val()}</td>
+        `;
+        data = data + `<td style='text-align:center; display: flex;'>
+                        <button type="button" class="close" aria-label="Close" onclick="deleteRow(this)">
+                          <span aria-hidden="true">&times;</span>
+                        </button>
+                        </td>
+                        `
+        $.ajax({
+          type:"POST",
+          url:"{% url 'get_current_stock_price'%}",
+          data:{
+            "ticker":$(this).find($("select[id=tickers_name]")).val()
+          },
+          success:(data_)=>{
+            console.log(data_);
+            data+=`
+            <td class="current_stock">
+              <input required class="form-control mt-3" type="number" readonly value = ${Math.round(data_["price"] * 100) / 100}>
+            </td>
+            <td class="portfolio_input">
+              <input min="0" max="100" step="0.01" required class="stock_input form-control mt-3" type="number">
+            </td>
+            `
+            $("#table_body").append(`<tr>${data}</tr>`);
+            $(this).trigger("reset");
+
+          },
+          error:(data,text,xhr)=>{
+            alert("Please enter corrent stoct ticker");
+          }
+        })
+        return false;
+
+    })
+  })
+  function deleteRow(element) {
+    $(element).parent().parent().remove();
+  }
+
+
+  </script>
+  <body>
+    <nav class="navbar navbar-light bg-light">
+      <a class="navbar-brand" href="{% url 'home' %}">MyPortfolio.Ai</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#dropdown" aria-controls="dropdown" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="dropdown">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'portfolio'%}">Portfolio</a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="#">Assets<span class="sr-only">(current)</span></a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout'%}">Log out</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <!-- {% for i in my_tickers %}
+    <p>{{i.ticker_name}}</p>
+    <p>{{i.description}}</p>
+    <p>{{i.percentage}}</p>
+    {% endfor %} -->
+    {% if error %}
+      <div class="container">
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+
+
+      </div>
+    {% else %}
+      <div class="ml-3">
+        <div class="d-flex justify-content-start">
+          <p style="font-size:2rem">Let's have a look at your portfolio</p>
+        </div>
+        <div class="d-flex">
+          <p>
+            With this tool you can allocate your current account and see how portfolio is diversified. Through yhe assesment you find out how your portfolio is performerd over last years.
+            Let's take it to next step! With the pro Edition you optimize your Portfolio and get the exact Max-sharp Ration. This way you minimize the risk and maximize the profit.
+          </p>
+        </div>
+      </div>
+      <div>
+        <form id="table_form">
+          <div class="form-group mx-3">
+            <label for="amount_invested">Investment Capital</label>
+            <input type="number" value="10000" class="form-control" name="amount_invested" step="0.01" id="amount_invested">
+          </div>
+          <div class="table-responsive">
+            <table class="table" id="protfolio_table">
+              <thead>
+                <tr class="asset_head">
+                  <th scope="col" style="font-size:1.5rem">Your ticker</th>
+                  <th scope="col" style="font-size:1.5rem">Delete this row</th>
+                  <th scope="col" style="font-size:1.5rem">Stock price</th>
+                  <th scope="col" style="font-size:1.5rem">Percentage of stocks</th>
+                </tr>
+              </thead>
+              <tbody id="table_body">
+              </tbody>
+            </table>
+
+            <div class="d-flex">
+              <a id="asset_link" class="p-2 bd-highlight" href="#" data-toggle="modal" data-target="#add_portfolio">Add asset</a>
+              <span class="ml-auto p-2 bd-highlight">*Percentages should add to 100%</span>
+            </div>
+
+          </div>
+          <div style="text-align:center">
+          <input type="submit" value="Analyze portfolio" class="btn btn-primary" >
+        </div>
+        </form>
+      </div>
+
+      <div class="container mt-3">
+        <div class="row">
+          <div class="col">
+            <div class="chart-container">
+              <canvas id="myChart"></canvas>
+            </div>
+          </div>
+
+          <div class="col">
+            <ul class="list-group" id="asset_list">
+            </ul>
+          </div>
+        </div>
+      </div>
+
+  <!-- <div class="container">
+    <div class="row">
+      <div class="col-sm">
+        <form id="port_form">
+          <div class="form-group">
+            <label for="start_date">Start of Investment</label>
+            <div id="start_date" class="input-group date" data-date-format="mm-dd-yyyy">
+                <input class="form-control" type="text" name="date" readonly id="start_date_text" >
+                <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="end_date">End of Investment</label>
+            <div id="end_date" class="input-group date" data-date-format="mm-dd-yyyy">
+                <input class="form-control" type="text" name="date" readonly id="end_date_text" >
+                <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="amount_invested">Amount Invested</label>
+            <input type="number" value="10000" class="form-control" name="amount_invested" step="0.01" id="amount_invested">
+          </div>
+        </form>
+      </div>
+      <div class="col">
+        <div class="chart-container" style="position: relative; height:20rem; width:100%">
+          <canvas id="line_chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div> -->
+
+      <div class="modal fade" id="add_portfolio" tabindex="-1" role="dialog" aria-hidden="true" aria-labelledby="add_portfolio_label">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="add_portfolio_label">Add a Asset</h5>
+              <button type="button" id="modal_close" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <form id="asset_form" method="get">
+                <div class="form-group">
+                  <label for="tickers_name">Name</label>
+                  <select id="tickers_name" class="custom-select" style="width:100%">
+                    {% for ticker in tickers%}
+                    <option value="{{ ticker.0 }}" class="{{ticker.1}}">{{ ticker.0 }}({{ ticker.1 }})</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <input type="submit" class="btn btn-primary" id="submit">
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script>
+        // var context = document.getElementById("line_chart").getContext('2d');
+        // var line_chart = new Chart(context, {
+        //    type: 'line',
+        //    options: {
+        //      maintainAspectRatio:false,
+        //      scales: {
+        //         xAxes: [{
+        //           type:"time",
+        //           distribution: "series",
+        //         }]
+        //       }
+        //  }
+        // });
+        var ctx = document.getElementById("myChart").getContext("2d");
+        var myChart = new Chart(ctx, {
+           type: 'pie',
+           data:{}
+         });
+        $("#table_form").submit(()=>{
+          let data = {"descriptions":[],"amount_invested":$("#table_form").find("#amount_invested").val()};
+
+          $("#protfolio_table").find("thead").find("tr").find("th").map((i,element)=>{
+            if($(element).html() !== "Delete this row"){
+              data[$(element).html()] = []
+            }
+          });
+          let t_data = $("#table_body").find("tr");
+          console.log(t_data);
+
+          t_data.map((i,item)=>{
+
+            data["Your ticker"].push($(item).find(".asset").html());
+            data["descriptions"].push($(item).find(".asset").attr("id"));
+            data["Stock price"].push(parseFloat($(item).find(".current_stock").find("input").val()));
+            data["Percentage of stocks"].push(parseFloat($(item).find(".portfolio_input").find("input").val()));
+          })
+
+          $.ajax({
+            type:"POST",
+            data:{
+              "data":JSON.stringify(data)
+            },
+            url:"{% url 'get_share'%}",
+            success:(data_)=>{
+              $("#asset_list").html("");
+              console.log(data_);
+              // console.log(data_["num_shares"]);
+              let tickers = Object.values(data_["data"]["ticker"]);
+              let shares = Object.values(data_["data"]["num_shares"]);
+              let colors = []
+              Object.keys(data_["data"]["ticker"]).map((item,i)=>{
+                colors.push(getRandomColor());
+                $("#asset_list").append(`
+                  <li class="list-group-item">
+                    <h4 style="font-weight:normal;color:${getRandomColor()}">Share name: ${tickers[i]}</h4>
+                    <p style="font-weight:normal;color:${getRandomColor()}">No. of shares to minimize risk: ${shares[i]}</p>
+                  </li>
+                  `)
+              })
+
+
+              myChart.data.labels = tickers;
+              myChart.data.datasets = [
+                {
+                  label:"Amount of shares",
+                  data:shares,
+                  backgroundColor:colors,
+                  borderWidth: [1, 1, 1, 1, 1]
+                }
+              ]
+              myChart.update();
+
+              // line_chart.data.datasets = [{
+              //   data : data_["port_data"],
+              //   backgroundColor:"transparent",
+              //   label:"ok",
+              //   borderColor:getRandomColor()
+              // }];
+              // line_chart.update();
+
+            }
+          })
+          return false;
+        })
+        function getRandomColor() {
+          var letters = '0123456789ABCDEF';
+          var color = '#';
+          for (var i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+          }
+          return color;
+        }
+      </script>
+    {% endif %}
+
+  </body>
+</html>
