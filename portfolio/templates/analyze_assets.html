@@ -174,37 +174,6 @@
         </div>
       </div>
 
-  <!-- <div class="container">
-    <div class="row">
-      <div class="col-sm">
-        <form id="port_form">
-          <div class="form-group">
-            <label for="start_date">Start of Investment</label>
-            <div id="start_date" class="input-group date" data-date-format="mm-dd-yyyy">
-                <input class="form-control" type="text" name="date" readonly id="start_date_text" >
-                <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="end_date">End of Investment</label>
-            <div id="end_date" class="input-group date" data-date-format="mm-dd-yyyy">
-                <input class="form-control" type="text" name="date" readonly id="end_date_text" >
-                <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="amount_invested">Amount Invested</label>
-            <input type="number" value="10000" class="form-control" name="amount_invested" step="0.01" id="amount_invested">
-          </div>
-        </form>
-      </div>
-      <div class="col">
-        <div class="chart-container" style="position: relative; height:20rem; width:100%">
-          <canvas id="line_chart"></canvas>
-        </div>
-      </div>
-    </div>
-  </div> -->
 
       <div class="modal fade" id="add_portfolio" tabindex="-1" role="dialog" aria-hidden="true" aria-labelledby="add_portfolio_label">
         <div class="modal-dialog" role="document">
@@ -232,19 +201,6 @@
         </div>
       </div>
       <script>
-        // var context = document.getElementById("line_chart").getContext('2d');
-        // var line_chart = new Chart(context, {
-        //    type: 'line',
-        //    options: {
-        //      maintainAspectRatio:false,
-        //      scales: {
-        //         xAxes: [{
-        //           type:"time",
-        //           distribution: "series",
-        //         }]
-        //       }
-        //  }
-        // });
         var ctx = document.getElementById("myChart").getContext("2d");
         var myChart = new Chart(ctx, {
            type: 'pie',
@@ -268,6 +224,16 @@
             data["Stock price"].push(parseFloat($(item).find(".current_stock").find("input").val()));
             data["Percentage of stocks"].push(parseFloat($(item).find(".portfolio_input").find("input").val()));
           })
+
+          var per = 0;
+
+          data["Percentage of stocks"].map((i,item)=>{
+            per+=i;
+          })
+          if(per < 99.99 || per>100.01){
+            alert("Percentages should add to 100");
+            return false;
+          }
 
           $.ajax({
             type:"POST",
